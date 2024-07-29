@@ -50,7 +50,7 @@ exports.handler = async (event) => {
             return;
         }
 
-        const entry = entries[0];
+        const entry = entries[entries.length - 1];
         const { uuid, tags, label: content } = entry;
 
         if (!content) {
@@ -78,12 +78,11 @@ exports.handler = async (event) => {
 
 
         // Step 3: Send email using SES
-        const fromAddress = process.env.EMAIL;
-        const toAddress = process.env.EMAIL;
-        const subject = 'Translated and Summarized Entry';
-        const textBody = translatedContent;
+        const fromAddress = process.env.FROM_EMAIL;
+        const toAddress = process.env.TO_EMAIL;
+        const subject = 'Dodaj do WIP';
 
-        const sendEmailCommand = createSendEmailCommand(toAddress, fromAddress, subject, textBody);
+        const sendEmailCommand = createSendEmailCommand(toAddress, fromAddress, subject, translatedContent);
         try {
             await sesClient.send(sendEmailCommand);
             console.log('Email sent successfully');
