@@ -37,7 +37,7 @@ Create manually `auto-wip` lambda function in AWS console.
 export $(grep -v '^#' .env | xargs)
 
 aws lambda update-function-configuration --function-name auto-wip \
-  --environment "Variables={SLOWTRACKER_API_KEY=$SLOWTRACKER_API_KEY,OPENAI_API_KEY=$OPENAI_API_KEY,FROM_EMAIL=$FROM_EMAIL,TO_EMAIL=$TO_EMAIL}" \
+  --environment "Variables={SLOWTRACKER_API_KEY=$SLOWTRACKER_API_KEY,OPENAI_API_KEY=$OPENAI_API_KEY,FROM_EMAIL=$FROM_EMAIL,TO_EMAIL=$TO_EMAIL,TELEGRAM_API_ID=$TELEGRAM_API_ID,TELEGRAM_API_HASH=$TELEGRAM_API_HASH,TELEGRAM_SESSION_ID=$TELEGRAM_SESSION_ID}" \
   --profile auto-wip \
   --timeout 30 \
   --region eu-central-1
