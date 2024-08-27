@@ -1,6 +1,7 @@
 const axios = require('axios');
 const OpenAI = require('openai');
-const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses")
+const { SESClient } = require("@aws-sdk/client-ses");
+const nodemailer = require("nodemailer");
 require('dotenv').config();
 
 const sesClient = new SESClient({ region: process.env.SES_REGION });
@@ -25,27 +26,19 @@ ${content}
 `
 }
 
-const createSendEmailCommand = (toAddress, fromAddress, subject, textBody) => {
-    return new SendEmailCommand({
-        Destination: {
-            ToAddresses: [toAddress],
-        },
-        Message: {
-            Body: {
-                Text: {
-                    Charset: "UTF-8",
-                    Data: textBody,
-                },
-            },
-            Subject: {
-                Charset: "UTF-8",
-                Data: subject,
-            },
-        },
-        Source: fromAddress,
+const createSendEmailCommand = async (toAddress, fromAddress, subject, textBody, attachments) => {
+    const transporter = nodemailer.createTransport({
+        SES: { ses: sesClient, aws: require("@aws-sdk/client-ses") },
+    });
+
+    return transporter.sendMail({
+        from: fromAddress,
+        to: toAddress,
+        subject: subject,
+        text: textBody,
+        attachments: attachments,
     });
 };
-
 
 exports.handler = async (event) => {
     try {
@@ -75,32 +68,37 @@ exports.handler = async (event) => {
             apiKey: process.env.OPENAI_API_KEY,
         });
 
-        const prompt = getPrompt(content, tags)
+        const prompt = getPrompt(content, tags);
 
         const gptResponse = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4',
             messages: [{ role: 'user', content: prompt }],
         });
 
         const translatedContent = gptResponse.choices[0].message.content.trim();
 
-        console.info('Translated and summarized content:', translatedContent)
+        console.info('Translated and summarized content:', translatedContent);
 
+        // Step 3: Prepare image attachments
+        const attachments = images.map(image => ({
+            filename: image.fileName,
+            path: image.url,
+            contentDisposition: 'attachment',
+        }));
 
-        // Step 3: Send email using SES
+        // Step 4: Send email using SES
         const fromAddress = process.env.FROM_EMAIL;
         const toAddress = process.env.TO_EMAIL;
         const subject = 'Dodaj do WIP';
 
-        const sendEmailCommand = createSendEmailCommand(toAddress, fromAddress, subject, translatedContent);
         try {
-            await sesClient.send(sendEmailCommand);
+            await createSendEmailCommand(toAddress, fromAddress, subject, translatedContent, attachments);
             console.log('Email sent successfully');
         } catch (error) {
             console.error('Error sending email:', error);
         }
 
-        // Step 4: Update entry with new tags
+        // Step 5: Update entry with new tags
         const newTags = tags.filter(tag => tag !== 'wip').concat('wip-added');
         await axios.patch(`https://api.slowtracker.com/wins/${uuid}`, {
             tags: newTags
