@@ -10,6 +10,10 @@ const getPrompt = (content, tags) => {
     return `
 You'll get a success, win or a lesson learned from a user. I need you to summarize it shortly in English (one sentence). Write it from the 1st person perspective. Replace name of the project with one of the following tags: ${tags.filter(tag => tag !== "wip").join(', ')}.
 
+My projects:
+- SpeechZap
+- SlowTracker
+
 For example, for the following content:
 ---
 Rozmowa z potencjalnym partnerem biznesowym o aplikacji SpeechZap i wzięciu udziału w programie partnerskim, w którym daję 25% prowizji przez rok od zarejestrowania się nowego klienta.
@@ -19,6 +23,8 @@ You should write:
 ---
 I had a conversation with a potential business partner about the #speechzap app and offered them a 25% commission for a year for every new client they register.
 ---
+
+Do not add more tags or any additional information.
 
 Now create new summary for the provided content:
 ---
